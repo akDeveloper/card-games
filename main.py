@@ -5,7 +5,7 @@ from game import Game
 
 
 class App(object):
-    FPS = 50
+    FPS = 20
 
     def __init__(self):
         self.running = True

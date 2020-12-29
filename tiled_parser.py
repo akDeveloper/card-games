@@ -79,6 +79,12 @@ class ObjectGroup(object):
     def get_items(self) -> list:
         return self.__items
 
+    def get_item(self, name: str) -> Optional[TileItem]:
+        for i in self.__items:
+            if i.get_type() == name:
+                return i
+        return None
+
     def get_name(self) -> str:
         return self.__name
 

@@ -1,4 +1,12 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "format":"json",
+         "target":"deck01.json"
+        }
+    },
  "height":40,
  "infinite":false,
  "layers":[
@@ -15,7 +23,7 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":224,
+                 "x":144,
                  "y":45
                 }, 
                 {
@@ -26,7 +34,7 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":128,
+                 "x":48,
                  "y":45
                 }, 
                 {
@@ -37,7 +45,7 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":320,
+                 "x":240,
                  "y":45
                 }, 
                 {
@@ -48,7 +56,7 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":416,
+                 "x":336,
                  "y":45
                 }, 
                 {
@@ -59,7 +67,7 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":512,
+                 "x":432,
                  "y":45
                 }, 
                 {
@@ -70,7 +78,18 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":608,
+                 "x":528,
+                 "y":45
+                }, 
+                {
+                 "height":96,
+                 "id":17,
+                 "name":"deck",
+                 "rotation":0,
+                 "type":"deck",
+                 "visible":true,
+                 "width":71,
+                 "x":688,
                  "y":45
                 }],
          "opacity":1,
@@ -92,7 +111,7 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":224,
+                 "x":144,
                  "y":375
                 }, 
                 {
@@ -103,7 +122,7 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":128,
+                 "x":48,
                  "y":375
                 }, 
                 {
@@ -114,7 +133,7 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":320,
+                 "x":240,
                  "y":375
                 }, 
                 {
@@ -125,7 +144,7 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":416,
+                 "x":336,
                  "y":375
                 }, 
                 {
@@ -136,7 +155,7 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":512,
+                 "x":432,
                  "y":375
                 }, 
                 {
@@ -147,7 +166,18 @@
                  "type":"",
                  "visible":true,
                  "width":71,
-                 "x":608,
+                 "x":528,
+                 "y":375
+                }, 
+                {
+                 "height":96,
+                 "id":16,
+                 "name":"deck",
+                 "rotation":0,
+                 "type":"deck",
+                 "visible":true,
+                 "width":71,
+                 "x":688,
                  "y":375
                 }],
          "opacity":1,
@@ -164,12 +194,23 @@
                 {
                  "height":96,
                  "id":14,
-                 "name":"",
+                 "name":"table",
                  "rotation":0,
-                 "type":"",
+                 "type":"table",
                  "visible":true,
                  "width":176,
-                 "x":320,
+                 "x":240,
+                 "y":210
+                }, 
+                {
+                 "height":96,
+                 "id":15,
+                 "name":"table_deck",
+                 "rotation":0,
+                 "type":"table_deck",
+                 "visible":true,
+                 "width":71,
+                 "x":688,
                  "y":210
                 }],
          "opacity":1,
@@ -179,7 +220,7 @@
          "y":0
         }],
  "nextlayerid":5,
- "nextobjectid":15,
+ "nextobjectid":18,
  "orientation":"orthogonal",
  "renderorder":"left-down",
  "tiledversion":"1.4.3",

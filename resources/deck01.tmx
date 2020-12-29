@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.4" tiledversion="1.4.3" orientation="orthogonal" renderorder="left-down" width="50" height="40" tilewidth="16" tileheight="15" infinite="0" nextlayerid="5" nextobjectid="15">
+<map version="1.4" tiledversion="1.4.3" orientation="orthogonal" renderorder="left-down" width="50" height="40" tilewidth="16" tileheight="15" infinite="0" nextlayerid="5" nextobjectid="18">
+ <editorsettings>
+  <export target="deck01.json" format="json"/>
+ </editorsettings>
  <objectgroup id="2" name="CPU">
-  <object id="1" x="224" y="45" width="71" height="96"/>
-  <object id="2" x="128" y="45" width="71" height="96"/>
-  <object id="3" x="320" y="45" width="71" height="96"/>
-  <object id="4" x="416" y="45" width="71" height="96"/>
-  <object id="5" x="512" y="45" width="71" height="96"/>
-  <object id="6" x="608" y="45" width="71" height="96"/>
+  <object id="1" x="144" y="45" width="71" height="96"/>
+  <object id="2" x="48" y="45" width="71" height="96"/>
+  <object id="3" x="240" y="45" width="71" height="96"/>
+  <object id="4" x="336" y="45" width="71" height="96"/>
+  <object id="5" x="432" y="45" width="71" height="96"/>
+  <object id="6" x="528" y="45" width="71" height="96"/>
+  <object id="17" name="deck" type="deck" x="688" y="45" width="71" height="96"/>
  </objectgroup>
  <objectgroup id="3" name="PLAYER">
-  <object id="7" x="224" y="375" width="71" height="96"/>
-  <object id="8" x="128" y="375" width="71" height="96"/>
-  <object id="9" x="320" y="375" width="71" height="96"/>
-  <object id="10" x="416" y="375" width="71" height="96"/>
-  <object id="11" x="512" y="375" width="71" height="96"/>
-  <object id="12" x="608" y="375" width="71" height="96"/>
+  <object id="7" x="144" y="375" width="71" height="96"/>
+  <object id="8" x="48" y="375" width="71" height="96"/>
+  <object id="9" x="240" y="375" width="71" height="96"/>
+  <object id="10" x="336" y="375" width="71" height="96"/>
+  <object id="11" x="432" y="375" width="71" height="96"/>
+  <object id="12" x="528" y="375" width="71" height="96"/>
+  <object id="16" name="deck" type="deck" x="688" y="375" width="71" height="96"/>
  </objectgroup>
  <objectgroup id="4" name="TABLE">
-  <object id="14" x="320" y="210" width="176" height="96"/>
+  <object id="14" name="table" type="table" x="240" y="210" width="176" height="96"/>
+  <object id="15" name="table_deck" type="table_deck" x="688" y="210" width="71" height="96"/>
  </objectgroup>
 </map>
