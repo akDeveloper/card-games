@@ -66,6 +66,7 @@ class Table(object):
         self.__compare_cards: list = []
         self.__winning_player: Player = None
         self.__last_winner: Player = None
+        self.__is_bonus_win = False
 
     def deal(self, actor: 'Player', cpu: 'Player') -> None:
         self.deck.deal(actor, cpu)
@@ -84,7 +85,7 @@ class Table(object):
 
     def place_card(self, card: Card) -> None:
         item = self.objectgroup.get_item('table')
-        card.rect.topright = item.get_rect().topright
+        card.rect.topleft = item.get_rect().topleft
         self.cards.add(card)
         self.__compare_cards = [self.__last_card, card]
         self.__last_card = card
@@ -113,6 +114,13 @@ class Table(object):
             self.__last_card = None
             self.__compare_cards = []
             return
+        if self.__is_bonus_win is True:
+            """ Bonus"""
+            card = self.cards.sprites()[0]
+            self.__winning_player.put_on_bonus(card)
+            self.cards.remove(card)
+            self.__is_bonus_win = False
+            return
         card = self.cards.sprites()[0]
         self.__winning_player.put_on_deck(card)
         self.cards.remove(card)
@@ -131,6 +139,8 @@ class Table(object):
             return False
         if pre.face == last.face or last.face == "Jack":
             result = True
+            if len(self.cards.sprites()) == 2 and pre.face == last.face:
+                self.__is_bonus_win = True
         self.__compare_cards = []
         return result
 
@@ -142,6 +152,7 @@ class Player(object):
         self.card_to_play: Card = None
         self.objectgroup = objectgroup
         self.win_cards: Group = Group()
+        self.bonus_cards: Group = Group()
         self.__played = False
         self.__turn = False
 
@@ -165,6 +176,11 @@ class Player(object):
 
     def draw(self, surface: Surface):
         self.on_hand.draw(surface)
+        if len(self.bonus_cards.sprites()) > 0:
+            copy = self.bonus_cards.sprites()
+            copy.reverse()
+            for s in copy:
+                surface.blit(s.image, s.rect)
         if len(self.win_cards.sprites()) > 0:
             self.win_cards.draw(surface)
 
@@ -192,6 +208,14 @@ class Player(object):
     def put_on_deck(self, card: Card) -> None:
         card.rect.topleft = self.objectgroup.get_item("deck").get_rect().topleft
         self.win_cards.add(card)
+        card.flip()
+
+    def put_on_bonus(self, card: Card) -> None:
+        bonus_cards = len(self.bonus_cards.sprites()) + 1
+        card.rect.topleft = self.objectgroup.get_item("deck").get_rect().topleft
+        card.rect.left += (bonus_cards * 20)
+        self.bonus_cards.add(card)
+        self.bonus_cards.sprites().reverse()
 
 
 class Cpu(Player):
