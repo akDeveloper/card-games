@@ -65,6 +65,7 @@ class Table(object):
         self.__last_card: Card = None
         self.__compare_cards: list = []
         self.__winning_player: Player = None
+        self.__last_winner: Player = None
 
     def deal(self, actor: 'Player', cpu: 'Player') -> None:
         self.deck.deal(actor, cpu)
@@ -102,8 +103,12 @@ class Table(object):
         if self.check_for_win():
             self.__winning_player = plr
 
+    def plr_collect_last_cards(self) -> None:
+        self.__winning_player = self.__last_winner
+
     def collect_winnings(self) -> None:
         if len(self.cards.sprites()) == 0:
+            self.__last_winner = self.__winning_player
             self.__winning_player = None
             self.__last_card = None
             self.__compare_cards = []

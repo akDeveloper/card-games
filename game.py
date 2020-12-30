@@ -79,8 +79,12 @@ class PlayGameState(GameState):
 
     def update(self, time: int, event: Event) -> None:
         if self.actor.cards_on_hand() == 0 and self.cpu.cards_on_hand() == 0:
-            if self.table.deck.is_empty():
+            if self.table.deck.is_empty() and self.table.is_empty():
                 self.state = EndGameState(self.actor, self.cpu, self.table)
+                return
+            if self.table.deck.is_empty() and not self.table.is_empty():
+                self.table.plr_collect_last_cards()
+                self.state = CollectWinningsState(self.actor, self.cpu, self.table)
                 return
             self.state = DealCardsState(self.actor, self.cpu, self.table)
             return
@@ -198,14 +202,18 @@ class DealTableState(GameState):
 
 
 class CollectWinningsState(GameState):
-    def __init__(self, actor: Player, cpu: Player, table: Table):
+    def __init__(self, actor: Player, cpu: Player, table: Table, last: bool = False):
         self.actor: Player = actor
         self.cpu: Player = cpu
         self.table: Table = table
+        self.last: bool = last
         self.state = None
 
     def update(self, time: int, event: Event) -> None:
         if self.table.has_winner() is False:
+            if self.last is True:
+                self.state = EndGameState(self.actor, self.cpu, self.table)
+                return
             self.state = PlayGameState(self.actor, self.cpu, self.table)
             return
         self.table.collect_winnings()
