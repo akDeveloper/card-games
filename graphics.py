@@ -2,12 +2,12 @@ from pygame import Surface, Rect, image
 from pygame.sprite import Sprite
 from pygame.transform import scale2x
 from pygame.display import set_mode, update
-from pygame.locals import HWSURFACE, SRCALPHA
+from pygame.locals import HWSURFACE, SRCALPHA, FULLSCREEN
 
 
 class Graphics(object):
     def __init__(self, width: int, height: int):
-        self.screen = set_mode((width, height), HWSURFACE)
+        self.screen = set_mode((width, height))
         """ temp Surface for handling the small graphics """
         self.__surface = Surface((width, height))
 

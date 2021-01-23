@@ -161,7 +161,7 @@ class DealCardsState(GameState):
         if self.table.deck.is_finished():
             self.state = PlayGameState(self.actor, self.cpu, self.table)
             return
-        self.table.deck.deal(self.actor, self.cpu)
+        self.table.deck.deal(time, self.actor, self.cpu)
 
     def render(self, surface: Surface) -> None:
         surface.fill((0, 38, 0))

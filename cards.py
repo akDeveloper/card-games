@@ -1,9 +1,77 @@
 from graphics import ImageFactory, SpriteSheet
 from pygame import Surface, Rect
+from pygame.math import Vector2
 from pygame.event import Event
 from pygame.sprite import Sprite, Group
 from tiled_parser import ObjectGroup
 import random
+
+
+def bresenham(x0, y0, x1, y1):
+    """
+    https://github.com/encukou/bresenham/blob/master/bresenham.py
+    Yield integer coordinates on the line from (x0, y0) to (x1, y1).
+    Input coordinates should be integers.
+    The result will contain both the start and the end point.
+    """
+    dx = x1 - x0
+    dy = y1 - y0
+
+    xsign = 1 if dx > 0 else -1
+    ysign = 1 if dy > 0 else -1
+
+    dx = abs(dx)
+    dy = abs(dy)
+
+    if dx > dy:
+        xx, xy, yx, yy = xsign, 0, 0, ysign
+    else:
+        dx, dy = dy, dx
+        xx, xy, yx, yy = 0, ysign, xsign, 0
+
+    D = 2 * dy - dx
+    y = 0
+
+    for x in range(dx + 1):
+        yield x0 + x * xx + y * yx, y0 + x * xy + y * yy
+        if D >= 0:
+            y += 1
+            D -= 2 * dx
+        D += 2 * dy
+
+
+class Steer(object):
+    def __init__(self, pos: tuple):
+        self.desired = None
+        self.max_speed = 5
+        self.max_force = 0.7
+        self.approach_radius = 30
+        self.pos = Vector2(pos[0], pos[1])
+        self.vel = Vector2(self.max_speed, 0).rotate(random.uniform(0, 360))
+        self.acc = Vector2(0, 0)
+        self.dist = 0
+
+    def seek_with_approach(self, target: tuple):
+        self.desired = (target - self.pos)
+        dist = self.desired.length()
+        self.desired.normalize_ip()
+        if dist < self.approach_radius:
+            self.desired *= dist / self.approach_radius * self.max_speed
+        else:
+            self.desired *= self.max_speed
+        steer = (self.desired - self.vel)
+        if steer.length() > self.max_force:
+            steer.scale_to_length(self.max_force)
+        self.dist = dist
+        return steer
+
+    def update(self, target: tuple):
+        self.acc = self.seek_with_approach(target)
+        # equations of motion
+        self.vel += self.acc
+        if self.vel.length() > self.max_speed:
+            self.vel.scale_to_length(self.max_speed)
+        self.pos += self.vel
 
 
 class CardsImageFactory(ImageFactory):
@@ -43,9 +111,27 @@ class Card(Sprite):
         self.image = back
         self.rect = image.get_rect()
         self.back = back
+        self.path: list = []
+        self.steer = None
+        self.target = None
+
+    def move_to(self, target: tuple) -> None:
+        path = list(bresenham(self.rect.left, self.rect.top, target[0], target[1]))
+        self.path.append(path.pop())
+        path.reverse()
+        last = path.pop()
+        self.path.extend(path[::90])
+        self.path.append(last)
+        self.target = target
+
+    def is_dealed(self) -> bool:
+        return self.rect.topleft == self.target
 
     def update(self, time: int):
-        pass
+        if len(self.path) > 0:
+            pos = self.path.pop()
+            self.rect.left = pos[0]
+            self.rect.top = pos[1]
 
     def flip(self) -> None:
         self.image = self.back
@@ -184,12 +270,13 @@ class Player(object):
         if len(self.win_cards.sprites()) > 0:
             self.win_cards.draw(surface)
 
-    def take_card(self, card: Card) -> None:
+    def take_card(self, card: Card) -> tuple:
         index = self.cards_on_hand()
         item = self.objectgroup.get_items()[index]
-        card.rect.topleft = item.get_rect().topleft
-        self.on_hand.add(card)
+        # card.rect.topleft = item.get_rect().topleft
+        # self.on_hand.add(card)
         card.show()
+        return item.get_rect().topleft
 
     def cards_on_hand(self) -> int:
         return len(self.on_hand.sprites())
@@ -220,8 +307,9 @@ class Player(object):
 
 class Cpu(Player):
     def take_card(self, card: Card) -> None:
-        super().take_card(card)
+        pos = super().take_card(card)
         card.flip()
+        return pos
 
     def play(self, table: Table) -> None:
         last = table.get_last_card()
@@ -245,6 +333,7 @@ class DeckOfCards(object):
         self.__deck: list = []
         self.__sprites: Group = Group()
         self.__deal_finished = False
+        self.__dealing_card = None
 
     def build(self, topleft: tuple) -> None:
         face: list = ["Ace", "Deuce", "Three", "Four", "Five",
@@ -282,15 +371,32 @@ class DeckOfCards(object):
         card.show()
         self.__sprites.remove(card)
 
-    def deal(self, actor: Player, cpu: Player) -> None:
+    def deal(self, time: int, actor: Player, cpu: Player) -> None:
         if actor.cards_on_hand() == 6 and cpu.cards_on_hand() == 6:
             self.__deal_finished = True
             return
         """ Deal to actor """
-        card = self.__deck.pop()
-        actor.take_card(card)
-        self.__sprites.remove(card)
+        if actor.cards_on_hand() < 6:
+            if self.__dealing_card is None:
+                self.__dealing_card = self.__deck.pop()
+                target = actor.take_card(self.__dealing_card)
+                self.__dealing_card.move_to(target)
+            self.__dealing_card.update(time)
+            if self.__dealing_card.is_dealed():
+                actor.on_hand.add(self.__dealing_card)
+                self.__sprites.remove(self.__dealing_card)
+                self.__dealing_card = None
         """ Deal to cpu """
-        card = self.__deck.pop()
-        cpu.take_card(card)
-        self.__sprites.remove(card)
+        if actor.cards_on_hand() == 6:
+            if self.__dealing_card is None:
+                self.__dealing_card = self.__deck.pop()
+                target = cpu.take_card(self.__dealing_card)
+                self.__dealing_card.move_to(target)
+            self.__dealing_card.update(time)
+            if self.__dealing_card.is_dealed():
+                cpu.on_hand.add(self.__dealing_card)
+                self.__sprites.remove(self.__dealing_card)
+                self.__dealing_card = None
+        # card = self.__deck.pop()
+        # cpu.take_card(card)
+        # self.__sprites.remove(card)
