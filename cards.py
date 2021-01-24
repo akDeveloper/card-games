@@ -5,6 +5,7 @@ from pygame.event import Event
 from pygame.sprite import Sprite, Group
 from tiled_parser import ObjectGroup
 import random
+from math import ceil
 
 
 def bresenham(x0, y0, x1, y1):
@@ -116,22 +117,23 @@ class Card(Sprite):
         self.target = None
 
     def move_to(self, target: tuple) -> None:
-        path = list(bresenham(self.rect.left, self.rect.top, target[0], target[1]))
-        self.path.append(path.pop())
-        path.reverse()
-        last = path.pop()
-        self.path.extend(path[::90])
-        self.path.append(last)
         self.target = target
 
     def is_dealed(self) -> bool:
         return self.rect.topleft == self.target
 
     def update(self, time: int):
-        if len(self.path) > 0:
-            pos = self.path.pop()
-            self.rect.left = pos[0]
-            self.rect.top = pos[1]
+        if self.target is not None:
+            dx = self.target[0] - self.rect.left
+            new_x = dx * 0.3
+            if abs(new_x) > 0 and abs(new_x) < 1:
+                new_x = -1 if new_x < 0 else 1
+            self.rect.left += new_x
+            dy = self.target[1] - self.rect.top
+            new_y = dy * 0.3
+            if abs(new_y) > 0 and abs(new_y) < 1:
+                new_y = -1 if new_y < 0 else 1
+            self.rect.top += new_y
 
     def flip(self) -> None:
         self.image = self.back
@@ -385,6 +387,7 @@ class DeckOfCards(object):
             if self.__dealing_card.is_dealed():
                 actor.on_hand.add(self.__dealing_card)
                 self.__sprites.remove(self.__dealing_card)
+                self.__dealing_card.target = None
                 self.__dealing_card = None
         """ Deal to cpu """
         if actor.cards_on_hand() == 6:
@@ -396,6 +399,7 @@ class DeckOfCards(object):
             if self.__dealing_card.is_dealed():
                 cpu.on_hand.add(self.__dealing_card)
                 self.__sprites.remove(self.__dealing_card)
+                self.__dealing_card.target = None
                 self.__dealing_card = None
         # card = self.__deck.pop()
         # cpu.take_card(card)
