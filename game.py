@@ -78,7 +78,8 @@ class PlayGameState(GameState):
         self.state = None
 
     def update(self, time: int, event: Event) -> None:
-        if self.actor.cards_on_hand() == 0 and self.cpu.cards_on_hand() == 0:
+        if self.actor.cards_on_hand() == 0 and self.cpu.cards_on_hand() == 0 and \
+                self.table.last_card_dealed():
             if self.table.deck.is_empty() and self.table.is_empty():
                 self.state = EndGameState(self.actor, self.cpu, self.table)
                 return
@@ -89,15 +90,15 @@ class PlayGameState(GameState):
             self.state = DealCardsState(self.actor, self.cpu, self.table)
             return
         self.actor.update(time, event)
-        self.actor.play(self.table)
+        self.actor.play(time, self.table)
         if self.actor.played():
             self.cpu.turn()
         self.table.update(time, self.actor)
         if self.table.has_winner():
             self.state = CollectWinningsState(self.actor, self.cpu, self.table)
             return
-        if self.actor.played() and self.timer.looped(time):
-            self.cpu.play(self.table)
+        if self.actor.played():
+            self.cpu.play(time, self.table)
             if self.cpu.played():
                 self.actor.turn()
         self.table.update(time, self.cpu)
@@ -187,7 +188,7 @@ class DealTableState(GameState):
         if self.table.deck.is_finished():
             self.state = PlayGameState(self.actor, self.cpu, self.table)
             return
-        self.table.deck.initial_deal(self.table)
+        self.table.deck.initial_deal(time, self.table)
 
     def render(self, surface: Surface) -> None:
         surface.fill((0, 38, 0))

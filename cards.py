@@ -125,12 +125,12 @@ class Card(Sprite):
     def update(self, time: int):
         if self.target is not None:
             dx = self.target[0] - self.rect.left
-            new_x = dx * 0.3
+            new_x = dx * 0.4
             if abs(new_x) > 0 and abs(new_x) < 1:
                 new_x = -1 if new_x < 0 else 1
             self.rect.left += new_x
             dy = self.target[1] - self.rect.top
-            new_y = dy * 0.3
+            new_y = dy * 0.4
             if abs(new_y) > 0 and abs(new_y) < 1:
                 new_y = -1 if new_y < 0 else 1
             self.rect.top += new_y
@@ -165,19 +165,25 @@ class Table(object):
     def has_winner(self) -> bool:
         return self.__winning_player is not None
 
-    def add_card(self, card: Card) -> None:
+    def add_card(self, card: Card) -> tuple:
         item = self.objectgroup.get_item('table')
-        card.rect.topleft = (item.get_rect().left + (self.get_cards() * 20), item.get_rect().top)
-        self.cards.add(card)
         self.__last_card = card
+        return (item.get_rect().left + (self.get_cards() * 20), item.get_rect().top)
 
-    def place_card(self, card: Card) -> None:
+    def place_card(self, card: Card) -> tuple:
         item = self.objectgroup.get_item('table')
-        card.rect.topleft = item.get_rect().topleft
-        self.cards.add(card)
+        card.show()
+        return item.get_rect().topleft
+
+    def add_to_compare(self, card: Card) -> None:
         self.__compare_cards = [self.__last_card, card]
         self.__last_card = card
-        card.show()
+
+    def last_card_dealed(self) -> bool:
+        for card in self.cards:
+            if not card.is_dealed():
+                return False
+        return True
 
     def get_cards(self) -> int:
         return len(self.cards.sprites())
@@ -275,24 +281,28 @@ class Player(object):
     def take_card(self, card: Card) -> tuple:
         index = self.cards_on_hand()
         item = self.objectgroup.get_items()[index]
-        # card.rect.topleft = item.get_rect().topleft
-        # self.on_hand.add(card)
         card.show()
         return item.get_rect().topleft
 
     def cards_on_hand(self) -> int:
         return len(self.on_hand.sprites())
 
-    def play(self, table: Table) -> None:
+    def play(self, time: int, table: Table) -> None:
         if self.card_to_play is None:
             return
         if self.__turn is False:
             return
-        table.place_card(self.card_to_play)
-        self.on_hand.remove(self.card_to_play)
-        self.card_to_play = None
-        self.__played = True
-        self.__turn = False
+        if self.card_to_play is not None:
+            target = table.place_card(self.card_to_play)
+            self.on_hand.remove(self.card_to_play)
+            table.cards.add(self.card_to_play)
+            self.card_to_play.move_to(target)
+        self.card_to_play.update(time)
+        if self.card_to_play.is_dealed():
+            table.add_to_compare(self.card_to_play)
+            self.card_to_play = None
+            self.__played = True
+            self.__turn = False
 
     def put_on_deck(self, card: Card) -> None:
         card.rect.topleft = self.objectgroup.get_item("deck").get_rect().topleft
@@ -313,18 +323,19 @@ class Cpu(Player):
         card.flip()
         return pos
 
-    def play(self, table: Table) -> None:
-        last = table.get_last_card()
-        for c in self.on_hand:
-            if last is None:
-                self.card_to_play = c
-                break
-            if c.face == last.face or c.face == "Jack":
-                self.card_to_play = c
-                break
+    def play(self, time: int, table: Table) -> None:
         if self.card_to_play is None:
-            self.card_to_play = self.on_hand.sprites()[0]
-        super().play(table)
+            last = table.get_last_card()
+            for c in self.on_hand:
+                if last is None:
+                    self.card_to_play = c
+                    break
+                if c.face == last.face or c.face == "Jack":
+                    self.card_to_play = c
+                    break
+            if self.card_to_play is None:
+                self.card_to_play = self.on_hand.sprites()[0]
+        super().play(time, table)
 
 
 class DeckOfCards(object):
@@ -335,7 +346,7 @@ class DeckOfCards(object):
         self.__deck: list = []
         self.__sprites: Group = Group()
         self.__deal_finished = False
-        self.__dealing_card = None
+        self.__dealing_card: Card = None
 
     def build(self, topleft: tuple) -> None:
         face: list = ["Ace", "Deuce", "Three", "Four", "Five",
@@ -364,14 +375,20 @@ class DeckOfCards(object):
     def is_empty(self) -> bool:
         return len(self.__deck) == 0
 
-    def initial_deal(self, table: Table) -> None:
+    def initial_deal(self, time: int, table: Table) -> None:
         if table.get_cards() == 4:
             self.__deal_finished = True
             return
-        card = self.__deck.pop()
-        table.add_card(card)
-        card.show()
-        self.__sprites.remove(card)
+        if self.__dealing_card is None:
+            self.__dealing_card = self.__deck.pop()
+            target = table.add_card(self.__dealing_card)
+            self.__dealing_card.move_to(target)
+            self.__dealing_card.show()
+        self.__dealing_card.update(time)
+        if self.__dealing_card.is_dealed():
+            table.cards.add(self.__dealing_card)
+            self.__sprites.remove(self.__dealing_card)
+            self.__dealing_card = None
 
     def deal(self, time: int, actor: Player, cpu: Player) -> None:
         if actor.cards_on_hand() == 6 and cpu.cards_on_hand() == 6:
@@ -401,6 +418,3 @@ class DeckOfCards(object):
                 self.__sprites.remove(self.__dealing_card)
                 self.__dealing_card.target = None
                 self.__dealing_card = None
-        # card = self.__deck.pop()
-        # cpu.take_card(card)
-        # self.__sprites.remove(card)
