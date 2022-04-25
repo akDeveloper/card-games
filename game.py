@@ -1,9 +1,7 @@
 from __future__ import annotations
-from play_game_view import PlayGameView
 from pygame import Rect, Surface, mouse, SYSTEM_CURSOR_ARROW, SYSTEM_CURSOR_HAND
 from graphics import Graphics
-from cards import DeckOfCards, Card, Player, Table, Cpu
-from pygame.sprite import Group
+from cards import Player, Table, Cpu
 from tiled_parser import TiledParser, Map
 from pygame.event import Event
 from pygame.cursors import Cursor
