@@ -5,7 +5,7 @@ from game import Game
 
 
 class App(object):
-    FPS = 20
+    FPS = 60
 
     def __init__(self):
         self.running = True
@@ -30,7 +30,7 @@ class App(object):
         pass
 
     def on_mouse_move(self, event: Event):
-        pass  # print(event.pos)
+        self.game.on_mouse_move(event)
 
     def on_mouse_up(self, event: Event):
         self.game.on_mouse_up(event)

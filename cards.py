@@ -125,12 +125,12 @@ class Card(Sprite):
     def update(self, time: int):
         if self.target is not None:
             dx = self.target[0] - self.rect.left
-            new_x = dx * 0.4
+            new_x = dx * 0.2
             if abs(new_x) > 0 and abs(new_x) < 1:
                 new_x = -1 if new_x < 0 else 1
             self.rect.left += new_x
             dy = self.target[1] - self.rect.top
-            new_y = dy * 0.4
+            new_y = dy * 0.2
             if abs(new_y) > 0 and abs(new_y) < 1:
                 new_y = -1 if new_y < 0 else 1
             self.rect.top += new_y

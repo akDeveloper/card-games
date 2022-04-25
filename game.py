@@ -1,11 +1,12 @@
 from __future__ import annotations
 from play_game_view import PlayGameView
-from pygame import Rect, Surface
+from pygame import Rect, Surface, mouse, SYSTEM_CURSOR_ARROW, SYSTEM_CURSOR_HAND
 from graphics import Graphics
 from cards import DeckOfCards, Card, Player, Table, Cpu
 from pygame.sprite import Group
 from tiled_parser import TiledParser, Map
 from pygame.event import Event
+from pygame.cursors import Cursor
 
 
 class Timer(object):
@@ -35,17 +36,21 @@ class Game(object):
         self.graphics = Graphics(self.SCREEN_WIDTH, self.SCREEN_HEIGHT)
         self.__debug = False
         self.state = StartGameState()
-        self.mouse_event = None
+        self.mouse_up_event = None
+        self.mouse_pos: tuple = (0, 0)
 
     def update(self, time: int) -> None:
         """ Get the next state of the game """
         self.state = self.state.get_state()
         """ Update the state of sprites, level, etc """
-        self.state.update(time, self.mouse_event)
-        self.mouse_event = None
+        self.state.update(time, self.mouse_up_event, self.mouse_pos)
+        self.mouse_up_event = None
 
     def on_mouse_up(self, event: Event) -> None:
-        self.mouse_event = event
+        self.mouse_up_event = event
+
+    def on_mouse_move(self, event: Event) -> None:
+        self.mouse_pos = event.pos
 
     def render(self) -> None:
         self.state.render(self.graphics.get_surface())
@@ -77,7 +82,7 @@ class PlayGameState(GameState):
         self.timer = Timer(1000)
         self.state = None
 
-    def update(self, time: int, event: Event) -> None:
+    def update(self, time: int, mouse_up_event: Event, mouse_pos: tuple) -> None:
         if self.actor.cards_on_hand() == 0 and self.cpu.cards_on_hand() == 0 and \
                 self.table.last_card_dealed():
             if self.table.deck.is_empty() and self.table.is_empty():
@@ -89,7 +94,7 @@ class PlayGameState(GameState):
                 return
             self.state = DealCardsState(self.actor, self.cpu, self.table)
             return
-        self.actor.update(time, event)
+        self.actor.update(time, mouse_up_event)
         self.actor.play(time, self.table)
         if self.actor.played():
             self.cpu.turn()
@@ -130,9 +135,11 @@ class StartGameState(GameState):
         self.state = None
         self.actor.turn()
 
-    def update(self, time: int, event: Event) -> None:
-        if event is not None and self.table.table_deck.get_rect().colliderect(Rect(event.pos, (5, 5))):
-            self.state = DealCardsState(self.actor, self.cpu, self.table)
+    def update(self, time: int, mouse_up_event: Event, mouse_pos: tuple) -> None:
+        self.update_mouse_cursor(self.table.table_deck.get_rect(), mouse_pos)
+        if mouse_up_event is not None and \
+                self.table.table_deck.get_rect().colliderect(Rect(mouse_up_event.pos, (5, 5))):
+            self.state = DealCardsState(self.actor, self.cpu, self.table, True)
 
     def render(self, surface: Surface) -> None:
         surface.fill((0, 38, 0))
@@ -145,18 +152,26 @@ class StartGameState(GameState):
             return self.state
         return self
 
+    def update_mouse_cursor(self, src: Rect, mouse_pos: tuple) -> None:
+        if src.colliderect(Rect(mouse_pos, (5, 5))) and \
+                mouse.get_cursor() is not Cursor(SYSTEM_CURSOR_HAND):
+            mouse.set_cursor(Cursor(SYSTEM_CURSOR_HAND))
+        else:
+            mouse.set_cursor(Cursor(SYSTEM_CURSOR_ARROW))
+
 
 class DealCardsState(GameState):
-    def __init__(self, actor: Player, cpu: Player, table: Table):
+    def __init__(self, actor: Player, cpu: Player, table: Table, initial: bool = False):
         self.actor: Player = actor
         self.cpu: Player = cpu
         self.table: Table = table
         self.table.deck.start_deal()
         self.state = None
+        self.initial = initial
+        mouse.set_cursor(Cursor(SYSTEM_CURSOR_ARROW))
 
-    def update(self, time: int, event: Event) -> None:
-        if self.table.deck.is_finished() and \
-                len(self.actor.win_cards) == 0 and len(self.cpu.win_cards) == 0:
+    def update(self, time: int, mouse_up_event: Event, mouse_pos: tuple) -> None:
+        if self.table.deck.is_finished() and self.initial is True:
             self.state = DealTableState(self.actor, self.cpu, self.table)
             return
         if self.table.deck.is_finished():
@@ -184,7 +199,7 @@ class DealTableState(GameState):
         self.table.deck.start_deal()
         self.state = None
 
-    def update(self, time: int, event: Event) -> None:
+    def update(self, time: int, mouse_up_event: Event, mouse_pos: tuple) -> None:
         if self.table.deck.is_finished():
             self.state = PlayGameState(self.actor, self.cpu, self.table)
             return
@@ -210,7 +225,7 @@ class CollectWinningsState(GameState):
         self.last: bool = last
         self.state = None
 
-    def update(self, time: int, event: Event) -> None:
+    def update(self, time: int, mouse_up_event: Event, mouse_pos: tuple) -> None:
         if self.table.has_winner() is False:
             if self.last is True:
                 self.state = EndGameState(self.actor, self.cpu, self.table)
@@ -238,7 +253,7 @@ class EndGameState(GameState):
         self.table: Table = table
         self.state = None
 
-    def update(self, time: int, event: Event) -> None:
+    def update(self, time: int, mouse_up_event: Event, mouse_pos: tuple) -> None:
         pass
 
     def render(self, surface: Surface) -> None:
